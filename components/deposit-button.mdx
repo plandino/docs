@@ -1,0 +1,432 @@
+---
+title: "Deposit Button"
+description: "Add deposit functionality to your mini app with the DepositButton component"
+---
+
+## Overview
+
+The `DepositButton` component provides a pre-built UI for initiating deposit transactions in your mini app. It handles the communication with the Lemon Cash mobile app to process deposits and provides a consistent user experience.
+
+## Basic Usage
+
+```typescript
+import { DepositButton } from 'mini-app-sdk';
+
+function MyMiniApp() {
+  return (
+    <div>
+      <DepositButton
+        amount={100}
+        currency="USDC"
+        network="polygon"
+        text="Deposit 100 USDC"
+        onClick={() => console.log('Deposit initiated')}
+      />
+    </div>
+  );
+}
+```
+
+## Props Reference
+
+<ParamField body="amount" type="number" required>
+  The amount to deposit in the smallest unit (e.g., wei for ETH, smallest decimal for tokens).
+</ParamField>
+
+<ParamField body="currency" type="string" required>
+  The currency/token symbol (e.g., "USDC", "ETH", "BTC").
+</ParamField>
+
+<ParamField body="network" type="CryptoNetwork" required>
+  The blockchain network for the transaction (e.g., "polygon", "ethereum").
+</ParamField>
+
+<ParamField body="text" type="string" default="Depositar">
+  The text to display on the button.
+</ParamField>
+
+<ParamField body="onClick" type="function">
+  Callback function called when the button is clicked.
+</ParamField>
+
+<ParamField body="loading" type="boolean" default="false">
+  Whether to show a loading spinner and disable the button.
+</ParamField>
+
+<ParamField body="disabled" type="boolean" default="false">
+  Whether the button is disabled and non-interactive.
+</ParamField>
+
+## Usage Examples
+
+### Simple Deposit
+
+```typescript
+import { DepositButton } from 'mini-app-sdk';
+
+function SimpleDeposit() {
+  return (
+    <DepositButton
+      amount={100}
+      currency="USDC"
+      network="polygon"
+      text="Deposit 100 USDC"
+    />
+  );
+}
+```
+
+### Deposit with Callback
+
+```typescript
+import { DepositButton } from 'mini-app-sdk';
+
+function DepositWithCallback() {
+  const handleDepositClick = () => {
+    console.log('Deposit button clicked');
+    // Additional logic before deposit
+  };
+
+  return (
+    <DepositButton
+      amount={50}
+      currency="ETH"
+      network="ethereum"
+      text="Deposit 50 ETH"
+      onClick={handleDepositClick}
+    />
+  );
+}
+```
+
+### Deposit with Loading State
+
+```typescript
+import { useState } from 'react';
+import { DepositButton } from 'mini-app-sdk';
+
+function DepositWithLoading() {
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleDeposit = async () => {
+    setIsProcessing(true);
+    try {
+      // Simulate some processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Deposit processed');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <DepositButton
+      amount={200}
+      currency="USDC"
+      network="polygon"
+      text={isProcessing ? 'Processing...' : 'Deposit 200 USDC'}
+      loading={isProcessing}
+      onClick={handleDeposit}
+    />
+  );
+}
+```
+
+### Conditional Deposit
+
+```typescript
+import { useState } from 'react';
+import { DepositButton } from 'mini-app-sdk';
+
+function ConditionalDeposit() {
+  const [balance, setBalance] = useState(1000);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const canDeposit = isAuthenticated && balance > 0;
+
+  return (
+    <DepositButton
+      amount={100}
+      currency="USDC"
+      network="polygon"
+      text="Deposit 100 USDC"
+      disabled={!canDeposit}
+      onClick={() => {
+        if (canDeposit) {
+          console.log('Deposit initiated');
+        }
+      }}
+    />
+  );
+}
+```
+
+## Handling Deposit Responses
+
+Use the `useDepositResponse` hook to listen for deposit transaction results:
+
+```typescript
+import { DepositButton, useDepositResponse } from 'mini-app-sdk';
+
+function DepositWithResponse() {
+  const { txHash, loading } = useDepositResponse({
+    onSuccess: () => {
+      console.log('Deposit successful:', txHash);
+      // Update UI, show success message, etc.
+    },
+    onError: () => {
+      console.error('Deposit failed');
+      // Show error message, retry option, etc.
+    },
+  });
+
+  return (
+    <div>
+      <DepositButton
+        amount={100}
+        currency="USDC"
+        network="polygon"
+        text={loading ? 'Processing...' : 'Deposit 100 USDC'}
+        loading={loading}
+      />
+      {txHash && <p>Transaction: {txHash}</p>}
+    </div>
+  );
+}
+```
+
+## Complete Example
+
+Here's a complete example showing deposit functionality with proper state management:
+
+```typescript
+import React, { useState } from 'react';
+import { DepositButton, useDepositResponse, useWebView } from 'mini-app-sdk';
+
+function MyMiniApp() {
+  const isWebView = useWebView();
+  const [balance, setBalance] = useState(1000);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const { txHash, loading } = useDepositResponse({
+    onSuccess: () => {
+      setBalance(prev => prev + 100);
+      console.log('Deposit successful:', txHash);
+    },
+    onError: () => {
+      console.error('Deposit failed');
+    },
+  });
+
+  if (!isWebView) {
+    return <div>This app only works inside Lemon Cash</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <div>Please authenticate first</div>;
+  }
+
+  return (
+    <div>
+      <h1>My Mini App</h1>
+      <p>Balance: {balance} USDC</p>
+      
+      <DepositButton
+        amount={100}
+        currency="USDC"
+        network="polygon"
+        text={loading ? 'Processing...' : 'Deposit 100 USDC'}
+        loading={loading}
+        disabled={loading}
+      />
+      
+      {txHash && (
+        <div>
+          <p>✅ Deposit successful!</p>
+          <p>Transaction: {txHash}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default MyMiniApp;
+```
+
+## Supported Networks
+
+The DepositButton supports the following blockchain networks:
+
+<ResponseField name="polygon" type="string">
+  Polygon (MATIC) network for fast and low-cost transactions.
+</ResponseField>
+
+<ResponseField name="ethereum" type="string">
+  Ethereum mainnet for high-value transactions.
+</ResponseField>
+
+<ResponseField name="arbitrum" type="string">
+  Arbitrum network for scalable Ethereum transactions.
+</ResponseField>
+
+## Supported Currencies
+
+The DepositButton supports various cryptocurrencies and tokens:
+
+<ResponseField name="USDC" type="string">
+  USD Coin - Stablecoin pegged to the US dollar.
+</ResponseField>
+
+<ResponseField name="ETH" type="string">
+  Ethereum - Native cryptocurrency of the Ethereum network.
+</ResponseField>
+
+<ResponseField name="MATIC" type="string">
+  Polygon - Native cryptocurrency of the Polygon network.
+</ResponseField>
+
+<ResponseField name="BTC" type="string">
+  Bitcoin - Can be used for deposits on supported networks.
+</ResponseField>
+
+<Info>
+Currency support may vary depending on the Lemon Cash mobile app version and network availability.
+</Info>
+
+## Best Practices
+
+<Tip>
+Follow these best practices when using the DepositButton component:
+</Tip>
+
+### 1. Show Loading States
+
+Always show loading indicators during transaction processing:
+
+```typescript
+<DepositButton
+  amount={100}
+  currency="USDC"
+  network="polygon"
+  text={loading ? 'Processing...' : 'Deposit 100 USDC'}
+  loading={loading}
+  disabled={loading}
+/>
+```
+
+### 2. Handle Transaction Responses
+
+Use the `useDepositResponse` hook to handle transaction results:
+
+```typescript
+const { txHash, loading } = useDepositResponse({
+  onSuccess: () => {
+    showSuccessMessage('Deposit successful!');
+    updateUserBalance();
+  },
+  onError: () => {
+    showErrorMessage('Deposit failed. Please try again.');
+  },
+});
+```
+
+### 3. Validate Inputs
+
+Validate deposit parameters before allowing the transaction:
+
+```typescript
+function validateDeposit(amount: number, currency: string) {
+  if (amount <= 0) {
+    throw new Error('Amount must be greater than 0');
+  }
+  if (!currency) {
+    throw new Error('Currency is required');
+  }
+  // Add more validation as needed
+}
+```
+
+### 4. Provide Clear Feedback
+
+Give users clear feedback about the transaction status:
+
+```typescript
+{loading && <p>Processing your deposit...</p>}
+{txHash && <p>✅ Deposit successful! Transaction: {txHash}</p>}
+{error && <p>❌ Deposit failed. Please try again.</p>}
+```
+
+## Error Handling
+
+Handle deposit errors gracefully:
+
+```typescript
+const { txHash, loading } = useDepositResponse({
+  onError: (error) => {
+    if (error.message.includes('insufficient funds')) {
+      showMessage('Insufficient funds for deposit');
+    } else if (error.message.includes('network')) {
+      showMessage('Network error. Please check your connection.');
+    } else {
+      showMessage('Deposit failed. Please try again.');
+    }
+  },
+});
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+<Accordion title="Deposit button not working">
+  Ensure your mini app is running inside the Lemon Cash WebView environment. The DepositButton only works when the app is loaded in the Lemon Cash mobile app.
+  
+  ```typescript
+  import { useWebView } from 'mini-app-sdk';
+  
+  const isWebView = useWebView();
+  if (!isWebView) {
+    return <div>This app only works inside Lemon Cash</div>;
+  }
+  ```
+</Accordion>
+
+<Accordion title="Transaction fails with insufficient funds">
+  Check that the user has sufficient balance for the deposit amount. You may want to validate the amount before initiating the transaction.
+  
+  ```typescript
+  const canDeposit = userBalance >= depositAmount;
+  
+  <DepositButton
+    amount={depositAmount}
+    currency="USDC"
+    network="polygon"
+    disabled={!canDeposit}
+  />
+  ```
+</Accordion>
+
+<Accordion title="Network not supported">
+  Ensure you're using a supported network. Check the network parameter matches one of the supported networks: "polygon", "ethereum", or "arbitrum".
+  
+  ```typescript
+  // Good
+  network="polygon"
+  
+  // Bad
+  network="unsupported-network"
+  ```
+</Accordion>
+
+<Accordion title="Currency not supported">
+  Verify that the currency is supported on the selected network. Some currencies may only be available on specific networks.
+  
+  ```typescript
+  // USDC is supported on Polygon
+  <DepositButton
+    amount={100}
+    currency="USDC"
+    network="polygon"
+  />
+  ```
+</Accordion>
+</AccordionGroup>

@@ -1,0 +1,491 @@
+---
+title: "Withdraw Button"
+description: "Add withdrawal functionality to your mini app with the WithdrawButton component"
+---
+
+## Overview
+
+The `WithdrawButton` component provides a pre-built UI for initiating withdrawal transactions in your mini app. It handles the communication with the Lemon Cash mobile app to process withdrawals and provides a consistent user experience.
+
+## Basic Usage
+
+```typescript
+import { WithdrawButton } from 'mini-app-sdk';
+
+function MyMiniApp() {
+  return (
+    <div>
+      <WithdrawButton
+        amount={50}
+        currency="USDC"
+        network="polygon"
+        text="Withdraw 50 USDC"
+        onClick={() => console.log('Withdrawal initiated')}
+      />
+    </div>
+  );
+}
+```
+
+## Props Reference
+
+<ParamField body="amount" type="number" required>
+  The amount to withdraw in the smallest unit (e.g., wei for ETH, smallest decimal for tokens).
+</ParamField>
+
+<ParamField body="currency" type="string" required>
+  The currency/token symbol to withdraw (e.g., "USDC", "ETH", "BTC").
+</ParamField>
+
+<ParamField body="network" type="CryptoNetwork" required>
+  The blockchain network for the withdrawal (e.g., "polygon", "ethereum").
+</ParamField>
+
+<ParamField body="text" type="string" default="Retirar">
+  The text to display on the button.
+</ParamField>
+
+<ParamField body="onClick" type="function">
+  Callback function called when the button is clicked.
+</ParamField>
+
+<ParamField body="loading" type="boolean" default="false">
+  Whether to show a loading spinner and disable the button.
+</ParamField>
+
+<ParamField body="disabled" type="boolean" default="false">
+  Whether the button is disabled and non-interactive.
+</ParamField>
+
+## Usage Examples
+
+### Simple Withdrawal
+
+```typescript
+import { WithdrawButton } from 'mini-app-sdk';
+
+function SimpleWithdrawal() {
+  return (
+    <WithdrawButton
+      amount={50}
+      currency="USDC"
+      network="polygon"
+      text="Withdraw 50 USDC"
+    />
+  );
+}
+```
+
+### Withdrawal with Callback
+
+```typescript
+import { WithdrawButton } from 'mini-app-sdk';
+
+function WithdrawalWithCallback() {
+  const handleWithdrawalClick = () => {
+    console.log('Withdrawal button clicked');
+    // Additional logic before withdrawal
+  };
+
+  return (
+    <WithdrawButton
+      amount={25}
+      currency="ETH"
+      network="ethereum"
+      text="Withdraw 25 ETH"
+      onClick={handleWithdrawalClick}
+    />
+  );
+}
+```
+
+### Withdrawal with Loading State
+
+```typescript
+import { useState } from 'react';
+import { WithdrawButton } from 'mini-app-sdk';
+
+function WithdrawalWithLoading() {
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleWithdrawal = async () => {
+    setIsProcessing(true);
+    try {
+      // Simulate some processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Withdrawal processed');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <WithdrawButton
+      amount={100}
+      currency="USDC"
+      network="polygon"
+      text={isProcessing ? 'Processing...' : 'Withdraw 100 USDC'}
+      loading={isProcessing}
+      onClick={handleWithdrawal}
+    />
+  );
+}
+```
+
+### Conditional Withdrawal
+
+```typescript
+import { useState } from 'react';
+import { WithdrawButton } from 'mini-app-sdk';
+
+function ConditionalWithdrawal() {
+  const [balance, setBalance] = useState(500);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const canWithdraw = isAuthenticated && balance >= 50;
+
+  return (
+    <WithdrawButton
+      amount={50}
+      currency="USDC"
+      network="polygon"
+      text="Withdraw 50 USDC"
+      disabled={!canWithdraw}
+      onClick={() => {
+        if (canWithdraw) {
+          console.log('Withdrawal initiated');
+        }
+      }}
+    />
+  );
+}
+```
+
+## Handling Withdrawal Responses
+
+Use the `useWithdrawResponse` hook to listen for withdrawal transaction results:
+
+```typescript
+import { WithdrawButton, useWithdrawResponse } from 'mini-app-sdk';
+
+function WithdrawalWithResponse() {
+  const { txHash, loading } = useWithdrawResponse({
+    onSuccess: () => {
+      console.log('Withdrawal successful:', txHash);
+      // Update UI, show success message, etc.
+    },
+    onError: () => {
+      console.error('Withdrawal failed');
+      // Show error message, retry option, etc.
+    },
+  });
+
+  return (
+    <div>
+      <WithdrawButton
+        amount={50}
+        currency="USDC"
+        network="polygon"
+        text={loading ? 'Processing...' : 'Withdraw 50 USDC'}
+        loading={loading}
+      />
+      {txHash && <p>Transaction: {txHash}</p>}
+    </div>
+  );
+}
+```
+
+## Complete Example
+
+Here's a complete example showing withdrawal functionality with proper state management:
+
+```typescript
+import React, { useState } from 'react';
+import { WithdrawButton, useWithdrawResponse, useWebView } from 'mini-app-sdk';
+
+function MyMiniApp() {
+  const isWebView = useWebView();
+  const [balance, setBalance] = useState(1000);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const { txHash, loading } = useWithdrawResponse({
+    onSuccess: () => {
+      setBalance(prev => prev - 50);
+      console.log('Withdrawal successful:', txHash);
+    },
+    onError: () => {
+      console.error('Withdrawal failed');
+    },
+  });
+
+  if (!isWebView) {
+    return <div>This app only works inside Lemon Cash</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <div>Please authenticate first</div>;
+  }
+
+  const canWithdraw = balance >= 50;
+
+  return (
+    <div>
+      <h1>My Mini App</h1>
+      <p>Balance: {balance} USDC</p>
+      
+      <WithdrawButton
+        amount={50}
+        currency="USDC"
+        network="polygon"
+        text={loading ? 'Processing...' : 'Withdraw 50 USDC'}
+        loading={loading}
+        disabled={loading || !canWithdraw}
+      />
+      
+      {!canWithdraw && balance < 50 && (
+        <p>Insufficient balance for withdrawal</p>
+      )}
+      
+      {txHash && (
+        <div>
+          <p>✅ Withdrawal successful!</p>
+          <p>Transaction: {txHash}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default MyMiniApp;
+```
+
+## Supported Networks
+
+The WithdrawButton supports the following blockchain networks:
+
+<ResponseField name="polygon" type="string">
+  Polygon (MATIC) network for fast and low-cost transactions.
+</ResponseField>
+
+<ResponseField name="ethereum" type="string">
+  Ethereum mainnet for high-value transactions.
+</ResponseField>
+
+<ResponseField name="arbitrum" type="string">
+  Arbitrum network for scalable Ethereum transactions.
+</ResponseField>
+
+## Supported Currencies
+
+The WithdrawButton supports various cryptocurrencies and tokens:
+
+<ResponseField name="USDC" type="string">
+  USD Coin - Stablecoin pegged to the US dollar.
+</ResponseField>
+
+<ResponseField name="ETH" type="string">
+  Ethereum - Native cryptocurrency of the Ethereum network.
+</ResponseField>
+
+<ResponseField name="MATIC" type="string">
+  Polygon - Native cryptocurrency of the Polygon network.
+</ResponseField>
+
+<ResponseField name="BTC" type="string">
+  Bitcoin - Can be used for withdrawals on supported networks.
+</ResponseField>
+
+<Info>
+Currency support may vary depending on the Lemon Cash mobile app version and network availability.
+</Info>
+
+## Best Practices
+
+<Tip>
+Follow these best practices when using the WithdrawButton component:
+</Tip>
+
+### 1. Validate Balance
+
+Always check if the user has sufficient balance before allowing withdrawals:
+
+```typescript
+const canWithdraw = userBalance >= withdrawalAmount;
+
+<WithdrawButton
+  amount={withdrawalAmount}
+  currency="USDC"
+  network="polygon"
+  disabled={!canWithdraw}
+  text={canWithdraw ? 'Withdraw' : 'Insufficient Balance'}
+/>
+```
+
+### 2. Show Loading States
+
+Always show loading indicators during transaction processing:
+
+```typescript
+<WithdrawButton
+  amount={50}
+  currency="USDC"
+  network="polygon"
+  text={loading ? 'Processing...' : 'Withdraw 50 USDC'}
+  loading={loading}
+  disabled={loading}
+/>
+```
+
+### 3. Handle Transaction Responses
+
+Use the appropriate hook to handle withdrawal results:
+
+```typescript
+const { txHash, loading } = useWithdrawResponse({
+  onSuccess: () => {
+    showSuccessMessage('Withdrawal successful!');
+    updateUserBalance();
+  },
+  onError: () => {
+    showErrorMessage('Withdrawal failed. Please try again.');
+  },
+});
+```
+
+### 4. Provide Clear Feedback
+
+Give users clear feedback about the withdrawal status:
+
+```typescript
+{loading && <p>Processing your withdrawal...</p>}
+{txHash && <p>✅ Withdrawal successful! Transaction: {txHash}</p>}
+{error && <p>❌ Withdrawal failed. Please try again.</p>}
+{!canWithdraw && <p>Insufficient balance for withdrawal</p>}
+```
+
+## Error Handling
+
+Handle withdrawal errors gracefully:
+
+```typescript
+const { txHash, loading } = useWithdrawResponse({
+  onError: (error) => {
+    if (error.message.includes('insufficient funds')) {
+      showMessage('Insufficient funds for withdrawal');
+    } else if (error.message.includes('network')) {
+      showMessage('Network error. Please check your connection.');
+    } else if (error.message.includes('gas')) {
+      showMessage('Insufficient gas for transaction.');
+    } else {
+      showMessage('Withdrawal failed. Please try again.');
+    }
+  },
+});
+```
+
+## Security Considerations
+
+<Warning>
+Withdrawals are irreversible transactions. Always implement proper validation and confirmation steps.
+</Warning>
+
+### 1. Confirm Withdrawal Amount
+
+Always show a confirmation dialog for withdrawal amounts:
+
+```typescript
+const handleWithdrawal = () => {
+  const confirmed = confirm(`Are you sure you want to withdraw ${amount} ${currency}?`);
+  if (confirmed) {
+    // Proceed with withdrawal
+    console.log('Withdrawal confirmed');
+  }
+};
+```
+
+### 2. Validate Withdrawal Limits
+
+Implement withdrawal limits to prevent large unexpected withdrawals:
+
+```typescript
+const MAX_WITHDRAWAL = 1000; // Maximum withdrawal amount
+const canWithdraw = amount <= MAX_WITHDRAWAL && userBalance >= amount;
+
+<WithdrawButton
+  amount={amount}
+  currency="USDC"
+  network="polygon"
+  disabled={!canWithdraw}
+  text={amount > MAX_WITHDRAWAL ? 'Amount too large' : 'Withdraw'}
+/>
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+<Accordion title="Withdrawal button not working">
+  Ensure your mini app is running inside the Lemon Cash WebView environment. The WithdrawButton only works when the app is loaded in the Lemon Cash mobile app.
+  
+  ```typescript
+  import { useWebView } from 'mini-app-sdk';
+  
+  const isWebView = useWebView();
+  if (!isWebView) {
+    return <div>This app only works inside Lemon Cash</div>;
+  }
+  ```
+</Accordion>
+
+<Accordion title="Transaction fails with insufficient funds">
+  Check that the user has sufficient balance for the withdrawal amount. You may want to validate the amount before initiating the transaction.
+  
+  ```typescript
+  const canWithdraw = userBalance >= withdrawalAmount;
+  
+  <WithdrawButton
+    amount={withdrawalAmount}
+    currency="USDC"
+    network="polygon"
+    disabled={!canWithdraw}
+  />
+  ```
+</Accordion>
+
+<Accordion title="Network not supported">
+  Ensure you're using a supported network. Check the network parameter matches one of the supported networks: "polygon", "ethereum", or "arbitrum".
+  
+  ```typescript
+  // Good
+  network="polygon"
+  
+  // Bad
+  network="unsupported-network"
+  ```
+</Accordion>
+
+<Accordion title="Currency not supported">
+  Verify that the currency is supported on the selected network. Some currencies may only be available on specific networks.
+  
+  ```typescript
+  // USDC is supported on Polygon
+  <WithdrawButton
+    amount={50}
+    currency="USDC"
+    network="polygon"
+  />
+  ```
+</Accordion>
+
+<Accordion title="Gas fees too high">
+  Some networks may have high gas fees that prevent withdrawals. Consider using networks with lower fees or smaller amounts.
+  
+  ```typescript
+  // Use Polygon for lower fees
+  <WithdrawButton
+    amount={50}
+    currency="USDC"
+    network="polygon" // Lower gas fees
+  />
+  ```
+</Accordion>
+</AccordionGroup>

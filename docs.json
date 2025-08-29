@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Lemon Cash Mini App SDK",
   "colors": {
     "primary": "#16A34A",
     "light": "#07C983",
@@ -15,34 +15,30 @@
         "groups": [
           {
             "group": "Getting started",
+            "pages": ["index", "quickstart", "installation"]
+          },
+          {
+            "group": "Core concepts",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "concepts/webview-communication",
+              "concepts/authentication",
+              "concepts/transactions"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Components",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "components/deposit-button",
+              "components/withdraw-button",
+              "components/smart-contract-button"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Hooks",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "hooks/use-authenticate",
+              "hooks/use-deposit-response",
+              "hooks/use-webview"
             ]
           }
         ]
@@ -51,18 +47,16 @@
         "tab": "API reference",
         "groups": [
           {
-            "group": "API documentation",
-            "pages": [
-              "api-reference/introduction"
-            ]
+            "group": "Types",
+            "pages": ["api-reference/types", "api-reference/webview-actions"]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Examples",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api-reference/examples/authentication",
+              "api-reference/examples/deposit",
+              "api-reference/examples/withdraw",
+              "api-reference/examples/smart-contract"
             ]
           }
         ]
@@ -71,19 +65,19 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
+          "anchor": "Submit your app",
+          "href": "https://lemon.me",
+          "icon": "upload"
         },
         {
           "anchor": "Community",
-          "href": "https://mintlify.com/community",
-          "icon": "slack"
+          "href": "https://t.me/lemoncrypto",
+          "icon": "telegram"
         },
         {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
+          "anchor": "Wiki",
+          "href": "https://wiki.lemon.me/",
+          "icon": "book-open-cover"
         }
       ]
     }
@@ -107,15 +101,15 @@
   },
   "contextual": {
     "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
   },
   "footer": {
     "socials": {

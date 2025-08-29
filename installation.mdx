@@ -1,0 +1,130 @@
+---
+title: "Installation"
+description: "Install and configure the Mini App SDK in your project"
+---
+
+## Install the SDK
+
+Install the Mini App SDK using your preferred package manager:
+
+<CodeGroup>
+```bash npm
+npm install mini-app-sdk
+```
+
+```bash yarn
+yarn add mini-app-sdk
+```
+
+```bash pnpm
+pnpm add mini-app-sdk
+```
+</CodeGroup>
+
+## Environment Requirements
+
+The Mini App SDK is designed to work within the Lemon Cash mobile app environment. Your mini app will run inside a React Native WebView, which provides the necessary bridge for communication with the native app.
+
+<Warning>
+The SDK hooks and components only work when your mini app is running inside the Lemon Cash mobile app's WebView. They will not function in a regular web browser environment.
+</Warning>
+
+## Basic Setup
+
+Import the SDK components and hooks in your mini app:
+
+```typescript
+// Import components
+import { Button, DepositButton, WithdrawButton, CallSmartContractButton } from 'mini-app-sdk';
+
+// Import hooks
+import { useAuthenticate, useDepositResponse, useWebView } from 'mini-app-sdk';
+
+// Import types
+import type { CryptoNetwork } from 'mini-app-sdk';
+```
+
+## Verify Installation
+
+To verify that the SDK is working correctly, you can use the `useWebView` hook to detect if your app is running inside the Lemon Cash WebView:
+
+```typescript
+import { useWebView } from 'mini-app-sdk';
+
+function MyMiniApp() {
+  const isWebView = useWebView();
+  
+  if (!isWebView) {
+    return <div>This app only works inside Lemon Cash</div>;
+  }
+  
+  return <div>Welcome to your mini app!</div>;
+}
+```
+
+## Next Steps
+
+<Steps>
+<Step title="Install the SDK">
+  Run the installation command for your package manager.
+  
+  <Check>
+  Verify installation by checking your `package.json` dependencies.
+  </Check>
+</Step>
+
+<Step title="Import components">
+  Import the components and hooks you need in your mini app.
+  
+  ```typescript
+  import { useAuthenticate, DepositButton } from 'mini-app-sdk';
+  ```
+</Step>
+
+<Step title="Test in Lemon Cash">
+  Deploy your mini app and test it inside the Lemon Cash mobile app.
+  
+  <Warning>
+  The SDK features only work when running inside the Lemon Cash WebView environment.
+  </Warning>
+</Step>
+</Steps>
+
+## Development Setup
+
+For local development and testing, you can use the following setup:
+
+### Using npm link (for local development)
+
+1. In the SDK directory, create a link:
+   ```bash
+   npm link
+   ```
+
+2. Build the SDK in watch mode:
+   ```bash
+   npm run dev
+   ```
+
+3. In your mini app directory:
+   ```bash
+   npm link mini-app-sdk
+   ```
+
+### Testing with Next.js
+
+If you're using Next.js for development, add this to your `next.config.js`:
+
+```javascript
+const nextConfig = {
+  webpack: (config) => {
+    // This allows Next.js to resolve the linked package
+    config.resolve.symlinks = true;
+    return config;
+  },
+};
+```
+
+<Info>
+For production deployment, always use the published npm package rather than linked versions.
+</Info>
