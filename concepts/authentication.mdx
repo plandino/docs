@@ -1,0 +1,273 @@
+---
+title: "Authentication"
+description: "Learn how to authenticate users in your mini app using wallet signatures"
+---
+
+## Overview
+
+The Mini App SDK provides secure user authentication through wallet signatures. This allows your mini app to verify user identity and access their wallet address without requiring them to manually enter private keys or seed phrases.
+
+## How Authentication Works
+
+The authentication process uses a challenge-response mechanism with cryptographic signatures:
+
+<Steps>
+<Step title="Generate nonce">
+  Your mini app generates a unique nonce (number used once) to prevent replay attacks.
+  
+  ```typescript
+  const nonce = 'unique-nonce-' + Date.now();
+  ```
+</Step>
+
+<Step title="Request signature">
+  Send the nonce to the Lemon Cash mobile app for user signature.
+  
+  ```typescript
+  const { authenticate } = useAuthenticate({
+    nonce: nonce,
+    onSuccess: (response) => {
+      // Handle successful authentication
+    },
+  });
+  
+  authenticate();
+  ```
+</Step>
+
+<Step title="User signs">
+  The user approves the signature request in the Lemon Cash mobile app.
+</Step>
+
+<Step title="Receive response">
+  Your mini app receives the signed response with wallet address and signature.
+  
+  ```typescript
+  {
+    predictedSafeAddress: '0x1234...',
+    claims: ['claim1', 'claim2'],
+    signature: '0xabcd...',
+    message: 'Sign this message to authenticate...'
+  }
+  ```
+</Step>
+
+<Step title="Verify signature">
+  Verify the signature to ensure the response is authentic and from the expected user.
+</Step>
+</Steps>
+
+## Using the Authentication Hook
+
+The `useAuthenticate` hook provides a simple way to handle authentication:
+
+```typescript
+import { useAuthenticate } from 'mini-app-sdk';
+
+function MyMiniApp() {
+  const { authenticate, loading, error, data } = useAuthenticate({
+    nonce: 'your-unique-nonce',
+    onSuccess: (response) => {
+      console.log('Authenticated:', response.predictedSafeAddress);
+      // Store user data, redirect, etc.
+    },
+    onError: (error) => {
+      console.error('Authentication failed:', error);
+      // Handle error (show message, retry, etc.)
+    },
+  });
+
+  return (
+    <div>
+      <button onClick={authenticate} disabled={loading}>
+        {loading ? 'Authenticating...' : 'Authenticate'}
+      </button>
+      
+      {error && <p>Error: {error.message}</p>}
+      
+      {data && (
+        <div>
+          <p>Welcome! Address: {data.predictedSafeAddress}</p>
+          <p>Signature: {data.signature}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+```
+
+## Authentication Response
+
+The authentication response includes the following data:
+
+<ResponseField name="predictedSafeAddress" type="string" required>
+  The user's wallet address that can be used for transactions and smart contract interactions.
+</ResponseField>
+
+<ResponseField name="claims" type="string[]" required>
+  Array of claims that the user has authorized for your mini app.
+</ResponseField>
+
+<ResponseField name="signature" type="string" required>
+  Cryptographic signature proving the user's ownership of the wallet address.
+</ResponseField>
+
+<ResponseField name="message" type="string" required>
+  The original message that was signed by the user.
+</ResponseField>
+
+## Security Best Practices
+
+<Tip>
+Follow these security practices to ensure secure authentication:
+</Tip>
+
+### 1. Use Unique Nonces
+
+Always generate unique nonces for each authentication request:
+
+```typescript
+// Good: Unique nonce
+const nonce = `auth-${Date.now()}-${Math.random()}`;
+
+// Bad: Static nonce
+const nonce = 'static-nonce';
+```
+
+### 2. Verify Signatures
+
+Always verify the signature to ensure the response is authentic:
+
+```typescript
+import { ethers } from 'ethers';
+
+function verifySignature(message: string, signature: string, address: string) {
+  const recoveredAddress = ethers.utils.verifyMessage(message, signature);
+  return recoveredAddress.toLowerCase() === address.toLowerCase();
+}
+```
+
+### 3. Handle Errors Gracefully
+
+Provide clear error messages and recovery options:
+
+```typescript
+const { authenticate, error } = useAuthenticate({
+  nonce: 'your-nonce',
+  onError: (error) => {
+    if (error.message.includes('user rejected')) {
+      // User cancelled the signature request
+      showMessage('Authentication cancelled by user');
+    } else {
+      // Other error
+      showMessage('Authentication failed. Please try again.');
+    }
+  },
+});
+```
+
+### 4. Store Authentication State
+
+Store authentication state securely in your app:
+
+```typescript
+const [isAuthenticated, setIsAuthenticated] = useState(false);
+const [userAddress, setUserAddress] = useState<string | null>(null);
+
+const { authenticate } = useAuthenticate({
+  nonce: 'your-nonce',
+  onSuccess: (response) => {
+    setIsAuthenticated(true);
+    setUserAddress(response.predictedSafeAddress);
+    // Store in localStorage or secure storage
+    localStorage.setItem('userAddress', response.predictedSafeAddress);
+  },
+});
+```
+
+## Complete Example
+
+Here's a complete authentication implementation:
+
+```typescript
+import React, { useState, useEffect } from 'react';
+import { useAuthenticate, useWebView } from 'mini-app-sdk';
+
+function MyMiniApp() {
+  const isWebView = useWebView();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userAddress, setUserAddress] = useState<string | null>(null);
+  
+  const { authenticate, loading, error, data } = useAuthenticate({
+    nonce: `auth-${Date.now()}-${Math.random()}`,
+    onSuccess: (response) => {
+      setIsAuthenticated(true);
+      setUserAddress(response.predictedSafeAddress);
+      localStorage.setItem('userAddress', response.predictedSafeAddress);
+      console.log('Authentication successful:', response);
+    },
+    onError: (error) => {
+      console.error('Authentication failed:', error);
+      setIsAuthenticated(false);
+      setUserAddress(null);
+    },
+  });
+
+  useEffect(() => {
+    // Check for existing authentication
+    const savedAddress = localStorage.getItem('userAddress');
+    if (savedAddress) {
+      setUserAddress(savedAddress);
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  if (!isWebView) {
+    return <div>This app only works inside Lemon Cash</div>;
+  }
+
+  if (isAuthenticated && userAddress) {
+    return (
+      <div>
+        <h1>Welcome!</h1>
+        <p>Address: {userAddress}</p>
+        <button onClick={() => {
+          setIsAuthenticated(false);
+          setUserAddress(null);
+          localStorage.removeItem('userAddress');
+        }}>
+          Logout
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h1>Authentication Required</h1>
+      <button onClick={authenticate} disabled={loading}>
+        {loading ? 'Authenticating...' : 'Authenticate with Lemon Cash'}
+      </button>
+      {error && <p>Error: {error.message}</p>}
+    </div>
+  );
+}
+
+export default MyMiniApp;
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+<Accordion title="Authentication fails with 'user rejected' error">
+  This error occurs when the user cancels the signature request in the Lemon Cash mobile app. Provide a clear message and allow them to try again.
+</Accordion>
+
+<Accordion title="Nonce validation fails">
+  Ensure you're generating unique nonces for each authentication request. Avoid using static or predictable nonces.
+</Accordion>
+
+<Accordion title="Signature verification fails">
+  Verify that you're using the correct message format and signature verification method. The message should match exactly what was signed.
+</Accordion>
+</AccordionGroup>

@@ -1,0 +1,612 @@
+---
+title: "API Types"
+description: "Complete reference of all types and interfaces in the Mini App SDK"
+---
+
+## Overview
+
+This page provides a complete reference of all TypeScript types and interfaces available in the Mini App SDK. These types ensure type safety and provide IntelliSense support when developing your mini apps.
+
+## Core Types
+
+### Transaction Button Types
+
+The SDK provides specialized button components for different transaction types. These components extend a common base interface and provide transaction-specific functionality.
+
+### WebView Communication Types
+
+```typescript
+export enum WebViewAction {
+  AUTHENTICATE = 'AUTHENTICATE',
+  DEPOSIT = 'DEPOSIT',
+  WITHDRAW = 'WITHDRAW',
+  CALL_SMART_CONTRACT = 'CALL_SMART_CONTRACT',
+}
+
+export enum WebViewResponse {
+  AUTHENTICATE_RESPONSE = 'AUTHENTICATE_RESPONSE',
+  DEPOSIT_RESPONSE = 'DEPOSIT_RESPONSE',
+}
+
+export interface WebViewMessage {
+  action: string;
+  [key: string]: any;
+}
+
+export interface AuthenticateMessage extends WebViewMessage {
+  action: WebViewAction.AUTHENTICATE;
+  nonce: string;
+}
+
+export interface AuthenticateResponse {
+  action: WebViewResponse.AUTHENTICATE_RESPONSE;
+  data: {
+    predictedSafeAddress: string;
+    claims: string[];
+    signature: string;
+    message: string;
+  };
+}
+
+export interface DepositResponse {
+  action: WebViewResponse.DEPOSIT_RESPONSE;
+  data: {
+    txHash: string;
+  };
+}
+```
+
+### Crypto Network Types
+
+```typescript
+export type CryptoNetwork = 'polygon' | 'ethereum' | 'arbitrum';
+```
+
+## Hook Types
+
+### useAuthenticate Hook
+
+```typescript
+export interface UseAuthenticateOptions {
+  nonce: string;
+  onSuccess?: (response: AuthenticateResponse['data']) => void;
+  onError?: (error: Error) => void;
+}
+
+export interface UseAuthenticateReturn {
+  authenticate: () => void;
+  loading: boolean;
+  error: Error | null;
+  data: AuthenticateResponse['data'] | null;
+}
+```
+
+### useDepositResponse Hook
+
+```typescript
+export interface UseDepositResponseOptions {
+  onSuccess?: () => void;
+  onError?: () => void;
+}
+
+export interface UseDepositResponseReturn {
+  txHash: string | undefined;
+  loading: boolean;
+  error: Error | null;
+}
+```
+
+### useWebView Hook
+
+```typescript
+export interface UseWebViewReturn {
+  isWebView: boolean;
+}
+```
+
+## Component Props Types
+
+### DepositButton Props
+
+```typescript
+export interface DepositButtonProps {
+  amount: number;
+  currency: string;
+  network: CryptoNetwork;
+  text?: string;
+  onClick?: () => void;
+  loading?: boolean;
+  disabled?: boolean;
+}
+```
+
+### WithdrawButton Props
+
+```typescript
+export interface WithdrawButtonProps {
+  amount: number;
+  currency: string;
+  network: CryptoNetwork;
+  text?: string;
+  onClick?: () => void;
+  loading?: boolean;
+  disabled?: boolean;
+}
+```
+
+### CallSmartContractButton Props
+
+```typescript
+export interface CallSmartContractButtonProps {
+  contractAddress: string;
+  functionName: string;
+  args: any[];
+  value: string;
+  network: CryptoNetwork;
+  text?: string;
+  onClick?: () => void;
+  loading?: boolean;
+  disabled?: boolean;
+}
+```
+
+## Authentication Response Types
+
+### AuthenticateResponse Data
+
+```typescript
+interface AuthenticateResponseData {
+  predictedSafeAddress: string;
+  claims: string[];
+  signature: string;
+  message: string;
+}
+```
+
+<ResponseField name="predictedSafeAddress" type="string" required>
+  The user's wallet address that can be used for transactions and smart contract interactions.
+</ResponseField>
+
+<ResponseField name="claims" type="string[]" required>
+  Array of claims that the user has authorized for your mini app.
+</ResponseField>
+
+<ResponseField name="signature" type="string" required>
+  Cryptographic signature proving the user's ownership of the wallet address.
+</ResponseField>
+
+<ResponseField name="message" type="string" required>
+  The original message that was signed by the user.
+</ResponseField>
+
+## Transaction Response Types
+
+### DepositResponse Data
+
+```typescript
+interface DepositResponseData {
+  txHash: string;
+}
+```
+
+<ResponseField name="txHash" type="string" required>
+  The transaction hash of the completed deposit transaction.
+</ResponseField>
+
+## Transaction Button Features
+
+All transaction buttons support the following common features:
+
+<ResponseField name="text" type="string">
+  Customizable button text to describe the transaction.
+</ResponseField>
+
+<ResponseField name="loading" type="boolean">
+  Shows loading spinner and disables the button during transaction processing.
+</ResponseField>
+
+<ResponseField name="disabled" type="boolean">
+  Disables the button when the transaction cannot be executed.
+</ResponseField>
+
+<ResponseField name="onClick" type="function">
+  Optional callback function called when the button is clicked.
+</ResponseField>
+
+## Crypto Network Types
+
+### CryptoNetwork
+
+<ResponseField name="polygon" type="string">
+  Polygon (MATIC) network for fast and low-cost transactions.
+</ResponseField>
+
+<ResponseField name="ethereum" type="string">
+  Ethereum mainnet for high-value transactions.
+</ResponseField>
+
+<ResponseField name="arbitrum" type="string">
+  Arbitrum network for scalable Ethereum transactions.
+</ResponseField>
+
+## WebView Action Types
+
+### WebViewAction Enum
+
+<ResponseField name="AUTHENTICATE" type="string">
+  Request user authentication with wallet signature.
+</ResponseField>
+
+<ResponseField name="DEPOSIT" type="string">
+  Initiate a deposit transaction.
+</ResponseField>
+
+<ResponseField name="WITHDRAW" type="string">
+  Initiate a withdrawal transaction.
+</ResponseField>
+
+<ResponseField name="CALL_SMART_CONTRACT" type="string">
+  Execute a smart contract function.
+</ResponseField>
+
+## WebView Response Types
+
+### WebViewResponse Enum
+
+<ResponseField name="AUTHENTICATE_RESPONSE" type="string">
+  Response to an authentication request.
+</ResponseField>
+
+<ResponseField name="DEPOSIT_RESPONSE" type="string">
+  Response to a deposit transaction.
+</ResponseField>
+
+## Type Usage Examples
+
+### Using Transaction Button Types
+
+```typescript
+import { DepositButton, DepositButtonProps } from 'mini-app-sdk';
+
+// Define deposit button props with proper typing
+const depositProps: DepositButtonProps = {
+  amount: 100,
+  currency: 'USDC',
+  network: 'polygon',
+  text: 'Deposit 100 USDC',
+  onClick: () => console.log('Deposit clicked'),
+};
+
+function MyComponent() {
+  return <DepositButton {...depositProps} />;
+}
+```
+
+### Using Hook Types
+
+```typescript
+import { 
+  useAuthenticate, 
+  UseAuthenticateOptions, 
+  UseAuthenticateReturn 
+} from 'mini-app-sdk';
+
+function MyComponent() {
+  const options: UseAuthenticateOptions = {
+    nonce: 'unique-nonce',
+    onSuccess: (response) => {
+      console.log('Authenticated:', response.predictedSafeAddress);
+    },
+    onError: (error) => {
+      console.error('Auth failed:', error);
+    },
+  };
+
+  const auth: UseAuthenticateReturn = useAuthenticate(options);
+  
+  return (
+    <button onClick={auth.authenticate} disabled={auth.loading}>
+      {auth.loading ? 'Authenticating...' : 'Authenticate'}
+    </button>
+  );
+}
+```
+
+### Using WebView Types
+
+```typescript
+import { 
+  WebViewAction, 
+  WebViewResponse, 
+  AuthenticateMessage,
+  AuthenticateResponse 
+} from 'mini-app-sdk';
+
+// Create a typed message
+const authMessage: AuthenticateMessage = {
+  action: WebViewAction.AUTHENTICATE,
+  nonce: 'unique-nonce',
+};
+
+// Handle typed response
+function handleAuthResponse(response: AuthenticateResponse) {
+  if (response.action === WebViewResponse.AUTHENTICATE_RESPONSE) {
+    console.log('Auth successful:', response.data.predictedSafeAddress);
+  }
+}
+```
+
+### Using Component Props Types
+
+```typescript
+import { 
+  DepositButtonProps, 
+  WithdrawButtonProps,
+  CallSmartContractButtonProps 
+} from 'mini-app-sdk';
+
+// Type-safe deposit button props
+const depositProps: DepositButtonProps = {
+  amount: 100,
+  currency: 'USDC',
+  network: 'polygon',
+  text: 'Deposit 100 USDC',
+  onClick: () => console.log('Deposit clicked'),
+};
+
+// Type-safe withdraw button props
+const withdrawProps: WithdrawButtonProps = {
+  amount: 50,
+  currency: 'USDC',
+  network: 'polygon',
+  text: 'Withdraw 50 USDC',
+  onClick: () => console.log('Withdraw clicked'),
+};
+
+// Type-safe smart contract button props
+const contractProps: CallSmartContractButtonProps = {
+  contractAddress: '0x1234...',
+  functionName: 'transfer',
+  args: ['0x5678...', '1000000000000000000'],
+  value: '0',
+  network: 'polygon',
+  text: 'Transfer 1 ETH',
+  onClick: () => console.log('Contract call clicked'),
+};
+```
+
+## Type Guards and Utilities
+
+### Type Guards
+
+```typescript
+import { WebViewAction, WebViewResponse } from 'mini-app-sdk';
+
+// Type guard for authentication messages
+function isAuthenticateMessage(message: any): message is AuthenticateMessage {
+  return message.action === WebViewAction.AUTHENTICATE && 
+         typeof message.nonce === 'string';
+}
+
+// Type guard for authentication responses
+function isAuthenticateResponse(response: any): response is AuthenticateResponse {
+  return response.action === WebViewResponse.AUTHENTICATE_RESPONSE &&
+         response.data &&
+         typeof response.data.predictedSafeAddress === 'string';
+}
+```
+
+### Utility Types
+
+```typescript
+// Extract button props without onClick
+type ButtonPropsWithoutClick = Omit<ButtonProps, 'onClick'>;
+
+// Create a custom button variant
+type CustomButtonVariant = ButtonVariant | 'custom';
+
+// Create a union type for all transaction amounts
+type TransactionAmount = number | string;
+
+// Create a type for network-specific configurations
+type NetworkConfig = {
+  [K in CryptoNetwork]: {
+    chainId: number;
+    rpcUrl: string;
+    explorerUrl: string;
+  };
+};
+```
+
+## Type Safety Best Practices
+
+<Tip>
+Follow these best practices for type safety in your mini app:
+</Tip>
+
+### 1. Use Strict Typing
+
+Always use the provided types instead of `any`:
+
+```typescript
+// Good
+const buttonProps: ButtonProps = {
+  text: 'Click me',
+  variant: 'primary',
+  onClick: () => console.log('clicked'),
+};
+
+// Bad
+const buttonProps: any = {
+  text: 'Click me',
+  variant: 'primary',
+  onClick: () => console.log('clicked'),
+};
+```
+
+### 2. Validate External Data
+
+Use type guards to validate data from external sources:
+
+```typescript
+function validateAuthResponse(data: any): data is AuthenticateResponse['data'] {
+  return (
+    typeof data === 'object' &&
+    typeof data.predictedSafeAddress === 'string' &&
+    Array.isArray(data.claims) &&
+    typeof data.signature === 'string' &&
+    typeof data.message === 'string'
+  );
+}
+```
+
+### 3. Use Const Assertions
+
+Use const assertions for literal types:
+
+```typescript
+// Good
+const network = 'polygon' as const;
+const variant = 'primary' as const;
+
+// Bad
+const network = 'polygon'; // Type is string, not 'polygon'
+const variant = 'primary'; // Type is string, not 'primary'
+```
+
+### 4. Leverage TypeScript Features
+
+Use TypeScript features like conditional types and mapped types:
+
+```typescript
+// Conditional type based on network
+type NetworkConfig<T extends CryptoNetwork> = T extends 'polygon' 
+  ? { chainId: 137; rpcUrl: string; }
+  : T extends 'ethereum'
+  ? { chainId: 1; rpcUrl: string; }
+  : { chainId: 42161; rpcUrl: string; };
+
+// Mapped type for button variants
+type ButtonVariantConfig = {
+  [K in ButtonVariant]: {
+    backgroundColor: string;
+    textColor: string;
+  };
+};
+```
+
+## Complete Type Example
+
+Here's a complete example showing how to use all the types together:
+
+```typescript
+import React, { useState } from 'react';
+import {
+  DepositButton,
+  DepositButtonProps,
+  useAuthenticate,
+  UseAuthenticateOptions,
+  useDepositResponse,
+  UseDepositResponseOptions,
+  CryptoNetwork,
+  WebViewAction,
+  WebViewResponse,
+} from 'mini-app-sdk';
+
+// Type-safe component props
+interface MyMiniAppProps {
+  title: string;
+  defaultNetwork: CryptoNetwork;
+}
+
+// Type-safe state
+interface AppState {
+  isAuthenticated: boolean;
+  userAddress: string | null;
+  balance: number;
+}
+
+function MyMiniApp({ title, defaultNetwork }: MyMiniAppProps) {
+  const [state, setState] = useState<AppState>({
+    isAuthenticated: false,
+    userAddress: null,
+    balance: 0,
+  });
+
+  // Type-safe authentication options
+  const authOptions: UseAuthenticateOptions = {
+    nonce: `auth-${Date.now()}-${Math.random()}`,
+    onSuccess: (response) => {
+      setState(prev => ({
+        ...prev,
+        isAuthenticated: true,
+        userAddress: response.predictedSafeAddress,
+      }));
+    },
+    onError: (error) => {
+      console.error('Authentication failed:', error);
+      setState(prev => ({
+        ...prev,
+        isAuthenticated: false,
+        userAddress: null,
+      }));
+    },
+  };
+
+  // Type-safe deposit response options
+  const depositOptions: UseDepositResponseOptions = {
+    onSuccess: () => {
+      setState(prev => ({
+        ...prev,
+        balance: prev.balance + 100,
+      }));
+    },
+    onError: () => {
+      console.error('Deposit failed');
+    },
+  };
+
+  const { authenticate, loading: authLoading, error: authError } = useAuthenticate(authOptions);
+  const { txHash, loading: depositLoading } = useDepositResponse(depositOptions);
+
+  // Type-safe deposit button props
+  const depositButtonProps: DepositButtonProps = {
+    amount: 100,
+    currency: 'USDC',
+    network: defaultNetwork,
+    text: depositLoading ? 'Processing...' : 'Deposit 100 USDC',
+    loading: depositLoading,
+    disabled: depositLoading || !state.isAuthenticated,
+  };
+
+  const depositButtonProps: DepositButtonProps = {
+    amount: 100,
+    currency: 'USDC',
+    network: defaultNetwork,
+    text: depositLoading ? 'Processing...' : 'Deposit 100 USDC',
+    loading: depositLoading,
+    disabled: depositLoading || !state.isAuthenticated,
+  };
+
+  return (
+    <div>
+      <h1>{title}</h1>
+      
+      {!state.isAuthenticated ? (
+        <div>Please authenticate first</div>
+      ) : (
+        <div>
+          <p>Welcome! Address: {state.userAddress}</p>
+          <p>Balance: {state.balance} USDC</p>
+          <DepositButton {...depositButtonProps} />
+          {txHash && <p>Transaction: {txHash}</p>}
+        </div>
+      )}
+      
+      {authError && <p>Error: {authError.message}</p>}
+    </div>
+  );
+}
+
+export default MyMiniApp;
+```

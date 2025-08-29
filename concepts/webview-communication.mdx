@@ -1,0 +1,182 @@
+---
+title: "WebView Communication"
+description: "Understand how your mini app communicates with the Lemon Cash mobile app"
+---
+
+## Overview
+
+The Mini App SDK enables communication between your web-based mini app and the native Lemon Cash mobile application through React Native WebView technology. This communication bridge allows your mini app to access native functionality like wallet authentication, transaction processing, and smart contract interactions.
+
+## How it works
+
+The communication flow follows a message-based architecture:
+
+<Steps>
+<Step title="Mini app sends message">
+  Your mini app sends a message to the native app using `window.ReactNativeWebView.postMessage()`.
+  
+  ```typescript
+  // Example: Sending authentication request
+  window.ReactNativeWebView.postMessage(JSON.stringify({
+    action: 'AUTHENTICATE',
+    nonce: 'your-nonce-here'
+  }));
+  ```
+</Step>
+
+<Step title="Native app processes">
+  The Lemon Cash mobile app receives the message and processes the request (e.g., signing a nonce, processing a transaction).
+</Step>
+
+<Step title="Native app responds">
+  The native app sends a response back to your mini app using `webViewRef.current.postMessage()`.
+  
+  ```typescript
+  // Example: Authentication response
+  webViewRef.current.postMessage(JSON.stringify({
+    action: 'AUTHENTICATE_RESPONSE',
+    data: {
+      predictedSafeAddress: '0x...',
+      signature: '0x...',
+      message: '...'
+    }
+  }));
+  ```
+</Step>
+
+<Step title="Mini app receives">
+  Your mini app receives the response through event listeners and updates its state accordingly.
+</Step>
+</Steps>
+
+## Message Structure
+
+All messages follow a consistent structure:
+
+```typescript
+interface WebViewMessage {
+  action: string;
+  [key: string]: any;
+}
+```
+
+### Supported Actions
+
+The SDK supports the following message actions:
+
+<ResponseField name="AUTHENTICATE" type="string">
+  Request user authentication with wallet signature.
+</ResponseField>
+
+<ResponseField name="DEPOSIT" type="string">
+  Initiate a deposit transaction.
+</ResponseField>
+
+<ResponseField name="WITHDRAW" type="string">
+  Initiate a withdrawal transaction.
+</ResponseField>
+
+<ResponseField name="CALL_SMART_CONTRACT" type="string">
+  Execute a smart contract function.
+</ResponseField>
+
+## Environment Detection
+
+The SDK provides a `useWebView` hook to detect if your app is running inside the Lemon Cash WebView:
+
+```typescript
+import { useWebView } from 'mini-app-sdk';
+
+function MyMiniApp() {
+  const isWebView = useWebView();
+  
+  if (!isWebView) {
+    return <div>This app only works inside Lemon Cash</div>;
+  }
+  
+  return <div>Welcome to your mini app!</div>;
+}
+```
+
+<Warning>
+The SDK hooks and components only work when running inside the Lemon Cash WebView environment. They will not function in a regular web browser.
+</Warning>
+
+## Error Handling
+
+The SDK provides built-in error handling for communication failures:
+
+```typescript
+const { authenticate, loading, error } = useAuthenticate({
+  nonce: 'your-nonce',
+  onError: (error) => {
+    console.error('Communication error:', error);
+    // Handle the error appropriately
+  },
+});
+```
+
+## Security Considerations
+
+<Info>
+All communication between your mini app and the Lemon Cash mobile app is secure and encrypted within the WebView environment.
+</Info>
+
+- **Message validation**: All messages are validated on both sides before processing
+- **Nonce verification**: Authentication requests use unique nonces to prevent replay attacks
+- **Signature verification**: All authentication responses include cryptographic signatures
+- **Sandboxed environment**: Mini apps run in a controlled environment with limited access
+
+## Best Practices
+
+<Tip>
+Follow these best practices for reliable WebView communication:
+</Tip>
+
+1. **Always check environment**: Use `useWebView()` to ensure your app is running in the correct environment
+2. **Handle loading states**: Show appropriate loading indicators while waiting for responses
+3. **Implement error handling**: Provide fallback behavior for communication failures
+4. **Use unique nonces**: Generate unique nonces for each authentication request
+5. **Validate responses**: Always validate response data before using it in your app
+
+## Example Implementation
+
+Here's a complete example showing WebView communication:
+
+```typescript
+import React, { useEffect } from 'react';
+import { useWebView, useAuthenticate } from 'mini-app-sdk';
+
+function MyMiniApp() {
+  const isWebView = useWebView();
+  const { authenticate, loading, error, data } = useAuthenticate({
+    nonce: 'unique-nonce-' + Date.now(),
+    onSuccess: (response) => {
+      console.log('Authentication successful:', response);
+    },
+    onError: (error) => {
+      console.error('Authentication failed:', error);
+    },
+  });
+
+  useEffect(() => {
+    if (!isWebView) {
+      console.warn('App is not running in Lemon Cash WebView');
+    }
+  }, [isWebView]);
+
+  if (!isWebView) {
+    return <div>Please open this app in Lemon Cash</div>;
+  }
+
+  return (
+    <div>
+      <button onClick={authenticate} disabled={loading}>
+        {loading ? 'Authenticating...' : 'Authenticate'}
+      </button>
+      {error && <p>Error: {error.message}</p>}
+      {data && <p>Authenticated: {data.predictedSafeAddress}</p>}
+    </div>
+  );
+}
+```

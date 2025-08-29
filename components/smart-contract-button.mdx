@@ -1,0 +1,653 @@
+---
+title: "Smart Contract Button"
+description: "Execute smart contract functions with the CallSmartContractButton component"
+---
+
+## Overview
+
+The `CallSmartContractButton` component provides a pre-built UI for executing smart contract functions in your mini app. It handles the communication with the Lemon Cash mobile app to process smart contract interactions and provides a consistent user experience.
+
+## Basic Usage
+
+```typescript
+import { CallSmartContractButton } from 'mini-app-sdk';
+
+function MyMiniApp() {
+  return (
+    <div>
+      <CallSmartContractButton
+        contractAddress="0x1234..."
+        functionName="transfer"
+        args={["0x5678...", "1000000000000000000"]}
+        value="0"
+        network="polygon"
+        text="Transfer 1 ETH"
+        onClick={() => console.log('Smart contract call initiated')}
+      />
+    </div>
+  );
+}
+```
+
+## Props Reference
+
+<ParamField body="contractAddress" type="string" required>
+  The address of the smart contract to interact with.
+</ParamField>
+
+<ParamField body="functionName" type="string" required>
+  The name of the function to call on the smart contract.
+</ParamField>
+
+<ParamField body="args" type="any[]" required>
+  Array of arguments to pass to the smart contract function.
+</ParamField>
+
+<ParamField body="value" type="string" required>
+  The amount of native currency (ETH, MATIC, etc.) to send with the transaction.
+</ParamField>
+
+<ParamField body="network" type="CryptoNetwork" required>
+  The blockchain network for the transaction.
+</ParamField>
+
+<ParamField body="text" type="string" default="Execute">
+  The text to display on the button.
+</ParamField>
+
+<ParamField body="onClick" type="function">
+  Callback function called when the button is clicked.
+</ParamField>
+
+<ParamField body="loading" type="boolean" default="false">
+  Whether to show a loading spinner and disable the button.
+</ParamField>
+
+<ParamField body="disabled" type="boolean" default="false">
+  Whether the button is disabled and non-interactive.
+</ParamField>
+
+## Usage Examples
+
+### Simple Smart Contract Call
+
+```typescript
+import { CallSmartContractButton } from 'mini-app-sdk';
+
+function SimpleContractCall() {
+  return (
+    <CallSmartContractButton
+      contractAddress="0x1234..."
+      functionName="transfer"
+      args={["0x5678...", "1000000000000000000"]}
+      value="0"
+      network="polygon"
+      text="Transfer 1 ETH"
+    />
+  );
+}
+```
+
+### Smart Contract Call with Callback
+
+```typescript
+import { CallSmartContractButton } from 'mini-app-sdk';
+
+function ContractCallWithCallback() {
+  const handleContractCall = () => {
+    console.log('Smart contract call initiated');
+    // Additional logic before contract call
+  };
+
+  return (
+    <CallSmartContractButton
+      contractAddress="0x1234..."
+      functionName="approve"
+      args={["0x5678...", "1000000000000000000"]}
+      value="0"
+      network="polygon"
+      text="Approve 1 ETH"
+      onClick={handleContractCall}
+    />
+  );
+}
+```
+
+### Smart Contract Call with Loading State
+
+```typescript
+import { useState } from 'react';
+import { CallSmartContractButton } from 'mini-app-sdk';
+
+function ContractCallWithLoading() {
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const handleContractCall = async () => {
+    setIsProcessing(true);
+    try {
+      // Simulate some processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Contract call processed');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  return (
+    <CallSmartContractButton
+      contractAddress="0x1234..."
+      functionName="mint"
+      args={["1"]}
+      value="1000000000000000000" // 1 ETH
+      network="polygon"
+      text={isProcessing ? 'Processing...' : 'Mint NFT'}
+      loading={isProcessing}
+      onClick={handleContractCall}
+    />
+  );
+}
+```
+
+### Conditional Smart Contract Call
+
+```typescript
+import { useState } from 'react';
+import { CallSmartContractButton } from 'mini-app-sdk';
+
+function ConditionalContractCall() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [hasApproval, setHasApproval] = useState(false);
+
+  const canExecute = isAuthenticated && hasApproval;
+
+  return (
+    <CallSmartContractButton
+      contractAddress="0x1234..."
+      functionName="stake"
+      args={["1000000000000000000"]}
+      value="0"
+      network="polygon"
+      text="Stake 1 ETH"
+      disabled={!canExecute}
+      onClick={() => {
+        if (canExecute) {
+          console.log('Staking initiated');
+        }
+      }}
+    />
+  );
+}
+```
+
+## Common Smart Contract Functions
+
+### ERC-20 Token Transfer
+
+```typescript
+import { CallSmartContractButton } from 'mini-app-sdk';
+
+function ERC20Transfer() {
+  return (
+    <CallSmartContractButton
+      contractAddress="0xA0b86a33E6441b8c4C8C8C8C8C8C8C8C8C8C8C8C" // USDC contract
+      functionName="transfer"
+      args={["0x1234...", "1000000"]} // recipient, amount (6 decimals for USDC)
+      value="0"
+      network="polygon"
+      text="Transfer 1 USDC"
+    />
+  );
+}
+```
+
+### ERC-20 Token Approval
+
+```typescript
+import { CallSmartContractButton } from 'mini-app-sdk';
+
+function ERC20Approval() {
+  return (
+    <CallSmartContractButton
+      contractAddress="0xA0b86a33E6441b8c4C8C8C8C8C8C8C8C8C8C8C8C" // USDC contract
+      functionName="approve"
+      args={["0x5678...", "1000000"]} // spender, amount
+      value="0"
+      network="polygon"
+      text="Approve 1 USDC"
+    />
+  );
+}
+```
+
+### NFT Minting
+
+```typescript
+import { CallSmartContractButton } from 'mini-app-sdk';
+
+function NFTMint() {
+  return (
+    <CallSmartContractButton
+      contractAddress="0x1234..." // NFT contract
+      functionName="mint"
+      args={["1"]} // quantity
+      value="1000000000000000000" // 1 ETH mint price
+      network="polygon"
+      text="Mint NFT (1 ETH)"
+    />
+  );
+}
+```
+
+### Staking
+
+```typescript
+import { CallSmartContractButton } from 'mini-app-sdk';
+
+function Staking() {
+  return (
+    <CallSmartContractButton
+      contractAddress="0x1234..." // Staking contract
+      functionName="stake"
+      args={["1000000000000000000"]} // amount to stake
+      value="0"
+      network="polygon"
+      text="Stake 1 ETH"
+    />
+  );
+}
+```
+
+## Handling Smart Contract Responses
+
+Use the `useSmartContractResponse` hook to listen for smart contract transaction results:
+
+```typescript
+import { CallSmartContractButton, useSmartContractResponse } from 'mini-app-sdk';
+
+function ContractCallWithResponse() {
+  const { txHash, loading } = useSmartContractResponse({
+    onSuccess: () => {
+      console.log('Smart contract call successful:', txHash);
+      // Update UI, show success message, etc.
+    },
+    onError: () => {
+      console.error('Smart contract call failed');
+      // Show error message, retry option, etc.
+    },
+  });
+
+  return (
+    <div>
+      <CallSmartContractButton
+        contractAddress="0x1234..."
+        functionName="transfer"
+        args={["0x5678...", "1000000000000000000"]}
+        value="0"
+        network="polygon"
+        text={loading ? 'Processing...' : 'Transfer 1 ETH'}
+        loading={loading}
+      />
+      {txHash && <p>Transaction: {txHash}</p>}
+    </div>
+  );
+}
+```
+
+## Complete Example
+
+Here's a complete example showing smart contract functionality with proper state management:
+
+```typescript
+import React, { useState } from 'react';
+import { CallSmartContractButton, useSmartContractResponse, useWebView } from 'mini-app-sdk';
+
+function MyMiniApp() {
+  const isWebView = useWebView();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [tokenBalance, setTokenBalance] = useState(1000);
+
+  const { txHash, loading } = useSmartContractResponse({
+    onSuccess: () => {
+      setTokenBalance(prev => prev - 100);
+      console.log('Transfer successful:', txHash);
+    },
+    onError: () => {
+      console.error('Transfer failed');
+    },
+  });
+
+  if (!isWebView) {
+    return <div>This app only works inside Lemon Cash</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <div>Please authenticate first</div>;
+  }
+
+  const canTransfer = tokenBalance >= 100;
+
+  return (
+    <div>
+      <h1>My Mini App</h1>
+      <p>Token Balance: {tokenBalance} USDC</p>
+      
+      <CallSmartContractButton
+        contractAddress="0xA0b86a33E6441b8c4C8C8C8C8C8C8C8C8C8C8C8C"
+        functionName="transfer"
+        args={["0x5678...", "100000"]} // 100 USDC (6 decimals)
+        value="0"
+        network="polygon"
+        text={loading ? 'Processing...' : 'Transfer 100 USDC'}
+        loading={loading}
+        disabled={loading || !canTransfer}
+      />
+      
+      {!canTransfer && tokenBalance < 100 && (
+        <p>Insufficient token balance for transfer</p>
+      )}
+      
+      {txHash && (
+        <div>
+          <p>✅ Transfer successful!</p>
+          <p>Transaction: {txHash}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default MyMiniApp;
+```
+
+## Supported Networks
+
+The CallSmartContractButton supports the following blockchain networks:
+
+<ResponseField name="polygon" type="string">
+  Polygon (MATIC) network for fast and low-cost transactions.
+</ResponseField>
+
+<ResponseField name="ethereum" type="string">
+  Ethereum mainnet for high-value transactions.
+</ResponseField>
+
+<ResponseField name="arbitrum" type="string">
+  Arbitrum network for scalable Ethereum transactions.
+</ResponseField>
+
+## Smart Contract Standards
+
+The component supports various smart contract standards:
+
+<ResponseField name="ERC-20" type="string">
+  Fungible token standard for tokens like USDC, ETH, etc.
+</ResponseField>
+
+<ResponseField name="ERC-721" type="string">
+  Non-fungible token standard for unique digital assets.
+</ResponseField>
+
+<ResponseField name="ERC-1155" type="string">
+  Multi-token standard for both fungible and non-fungible tokens.
+</ResponseField>
+
+<ResponseField name="Custom" type="string">
+  Any custom smart contract with standard function interfaces.
+</ResponseField>
+
+<Info>
+Smart contract support depends on the contract's implementation and the Lemon Cash mobile app's capabilities.
+</Info>
+
+## Best Practices
+
+<Tip>
+Follow these best practices when using the CallSmartContractButton component:
+</Tip>
+
+### 1. Validate Contract Address
+
+Always validate the contract address before making calls:
+
+```typescript
+function isValidAddress(address: string): boolean {
+  return /^0x[a-fA-F0-9]{40}$/.test(address);
+}
+
+const contractAddress = "0x1234...";
+if (!isValidAddress(contractAddress)) {
+  console.error('Invalid contract address');
+  return;
+}
+```
+
+### 2. Handle Gas Estimation
+
+Consider gas costs when making smart contract calls:
+
+```typescript
+<CallSmartContractButton
+  contractAddress="0x1234..."
+  functionName="transfer"
+  args={["0x5678...", "1000000000000000000"]}
+  value="0"
+  network="polygon" // Lower gas fees
+  text="Transfer 1 ETH"
+/>
+```
+
+### 3. Show Loading States
+
+Always show loading indicators during transaction processing:
+
+```typescript
+<CallSmartContractButton
+  contractAddress="0x1234..."
+  functionName="transfer"
+  args={["0x5678...", "1000000000000000000"]}
+  value="0"
+  network="polygon"
+  text={loading ? 'Processing...' : 'Transfer 1 ETH'}
+  loading={loading}
+  disabled={loading}
+/>
+```
+
+### 4. Handle Transaction Responses
+
+Use the appropriate hook to handle smart contract call results:
+
+```typescript
+const { txHash, loading } = useSmartContractResponse({
+  onSuccess: () => {
+    showSuccessMessage('Transaction successful!');
+    updateContractState();
+  },
+  onError: () => {
+    showErrorMessage('Transaction failed. Please try again.');
+  },
+});
+```
+
+## Error Handling
+
+Handle smart contract errors gracefully:
+
+```typescript
+const { txHash, loading } = useSmartContractResponse({
+  onError: (error) => {
+    if (error.message.includes('insufficient funds')) {
+      showMessage('Insufficient funds for transaction');
+    } else if (error.message.includes('gas')) {
+      showMessage('Insufficient gas for transaction.');
+    } else if (error.message.includes('revert')) {
+      showMessage('Transaction reverted. Check contract conditions.');
+    } else {
+      showMessage('Transaction failed. Please try again.');
+    }
+  },
+});
+```
+
+## Security Considerations
+
+<Warning>
+Smart contract interactions can be complex and potentially risky. Always validate inputs and understand the contract's behavior.
+</Warning>
+
+### 1. Validate Function Parameters
+
+Always validate function arguments before making calls:
+
+```typescript
+function validateTransferArgs(recipient: string, amount: string) {
+  if (!isValidAddress(recipient)) {
+    throw new Error('Invalid recipient address');
+  }
+  if (parseFloat(amount) <= 0) {
+    throw new Error('Amount must be greater than 0');
+  }
+}
+
+const recipient = "0x5678...";
+const amount = "1000000000000000000";
+
+try {
+  validateTransferArgs(recipient, amount);
+  // Proceed with contract call
+} catch (error) {
+  console.error('Validation failed:', error.message);
+}
+```
+
+### 2. Check Contract Permissions
+
+Ensure the user has the necessary permissions for the contract function:
+
+```typescript
+const hasApproval = await checkTokenApproval(tokenContract, spender, amount);
+
+<CallSmartContractButton
+  contractAddress={tokenContract}
+  functionName="transferFrom"
+  args={[from, to, amount]}
+  value="0"
+  network="polygon"
+  disabled={!hasApproval}
+  text={hasApproval ? 'Transfer' : 'Approval Required'}
+/>
+```
+
+### 3. Use Safe Contract Patterns
+
+Prefer safe contract patterns and avoid complex interactions:
+
+```typescript
+// Good: Simple transfer
+<CallSmartContractButton
+  contractAddress="0x1234..."
+  functionName="transfer"
+  args={["0x5678...", "1000000000000000000"]}
+  value="0"
+  network="polygon"
+  text="Transfer 1 ETH"
+/>
+
+// Avoid: Complex multi-step operations
+// These should be broken down into separate transactions
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+<Accordion title="Smart contract button not working">
+  Ensure your mini app is running inside the Lemon Cash WebView environment. The CallSmartContractButton only works when the app is loaded in the Lemon Cash mobile app.
+  
+  ```typescript
+  import { useWebView } from 'mini-app-sdk';
+  
+  const isWebView = useWebView();
+  if (!isWebView) {
+    return <div>This app only works inside Lemon Cash</div>;
+  }
+  ```
+</Accordion>
+
+<Accordion title="Transaction fails with revert">
+  Smart contract transactions can revert for various reasons. Check the contract's conditions and ensure all parameters are correct.
+  
+  ```typescript
+  // Check if user has sufficient balance
+  const balance = await contract.balanceOf(userAddress);
+  const canTransfer = balance >= transferAmount;
+  
+  <CallSmartContractButton
+    contractAddress="0x1234..."
+    functionName="transfer"
+    args={[recipient, transferAmount]}
+    value="0"
+    network="polygon"
+    disabled={!canTransfer}
+  />
+  ```
+</Accordion>
+
+<Accordion title="Gas fees too high">
+  Some networks may have high gas fees. Consider using networks with lower fees or optimizing the transaction.
+  
+  ```typescript
+  // Use Polygon for lower gas fees
+  <CallSmartContractButton
+    contractAddress="0x1234..."
+    functionName="transfer"
+    args={["0x5678...", "1000000000000000000"]}
+    value="0"
+    network="polygon" // Lower gas fees
+    text="Transfer 1 ETH"
+  />
+  ```
+</Accordion>
+
+<Accordion title="Contract address not found">
+  Ensure the contract address is correct and the contract exists on the specified network.
+  
+  ```typescript
+  // Verify contract address format
+  const isValidContract = /^0x[a-fA-F0-9]{40}$/.test(contractAddress);
+  
+  if (!isValidContract) {
+    console.error('Invalid contract address');
+    return;
+  }
+  ```
+</Accordion>
+
+<Accordion title="Function not found">
+  Ensure the function name and arguments match the contract's interface. Check the contract's ABI or documentation.
+  
+  ```typescript
+  // Common ERC-20 functions
+  const functions = {
+    transfer: ['address', 'uint256'],
+    approve: ['address', 'uint256'],
+    transferFrom: ['address', 'address', 'uint256'],
+  };
+  ```
+</Accordion>
+
+<Accordion title="Insufficient native currency">
+  Some smart contract calls require native currency (ETH, MATIC) to be sent with the transaction. Set the value parameter accordingly.
+  
+  ```typescript
+  // For minting NFTs that require payment
+  <CallSmartContractButton
+    contractAddress="0x1234..."
+    functionName="mint"
+    args={["1"]}
+    value="1000000000000000000" // 1 ETH
+    network="polygon"
+    text="Mint NFT (1 ETH)"
+  />
+  ```
+</Accordion>
+</AccordionGroup>

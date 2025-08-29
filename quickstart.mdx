@@ -1,80 +1,207 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+description: "Build your first mini app in under 10 minutes"
 ---
 
-## Get started in three steps
+## Build your first mini app
 
-Get your documentation site running locally and make your first customization.
+Create a simple mini app that authenticates users and handles deposits in just a few steps.
 
-### Step 1: Set up your local environment
+### Step 1: Install and set up
 
 <AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+  <Accordion icon="download" title="Install the SDK">
+    Install the Mini App SDK in your project:
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
+    ```bash
+    npm install mini-app-sdk
+    ```
+    
+    <Tip>You can also use yarn or pnpm as your package manager.</Tip>
   </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
+  <Accordion icon="code" title="Create your mini app">
+    Create a new React component for your mini app:
     
-    <Tip>Your preview updates automatically as you edit files.</Tip>
+    ```typescript
+    import React from 'react';
+    import { useAuthenticate, DepositButton, useWebView } from 'mini-app-sdk';
+    
+    function MyMiniApp() {
+      const isWebView = useWebView();
+      
+      if (!isWebView) {
+        return <div>This app only works inside Lemon Cash</div>;
+      }
+      
+      return <div>Welcome to your mini app!</div>;
+    }
+    
+    export default MyMiniApp;
+    ```
   </Accordion>
 </AccordionGroup>
 
-### Step 2: Deploy your changes
+### Step 2: Add authentication
 
 <AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
+  <Accordion icon="key" title="Implement user authentication">
+    Add authentication to your mini app using the `useAuthenticate` hook:
     
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
+    ```typescript
+    function MyMiniApp() {
+      const { authenticate, loading, error, data } = useAuthenticate({
+        nonce: 'your-unique-nonce',
+        onSuccess: (response) => {
+          console.log('Authenticated:', response.predictedSafeAddress);
+        },
+        onError: (error) => {
+          console.error('Authentication failed:', error);
+        },
+      });
+      
+      return (
+        <div>
+          <button onClick={authenticate} disabled={loading}>
+            {loading ? 'Authenticating...' : 'Authenticate'}
+          </button>
+          {error && <p>Error: {error.message}</p>}
+          {data && <p>Address: {data.predictedSafeAddress}</p>}
+        </div>
+      );
+    }
+    ```
+    
+    <Tip>The authentication process uses wallet signatures for secure user verification.</Tip>
+  </Accordion>
+  <Accordion icon="wallet" title="Add deposit functionality">
+    Include a deposit button in your mini app:
+    
+    ```typescript
+    function MyMiniApp() {
+      return (
+        <div>
+          <DepositButton
+            amount={100}
+            currency="USDC"
+            network="polygon"
+            text="Deposit 100 USDC"
+            onClick={() => console.log('Deposit initiated')}
+          />
+        </div>
+      );
+    }
+    ```
   </Accordion>
 </AccordionGroup>
 
-### Step 3: Go live
+### Step 3: Test and deploy
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
+<Accordion icon="rocket" title="Test your mini app">
+  1. Deploy your mini app to a web server.
+  2. Test it inside the Lemon Cash mobile app.
+  3. Verify that authentication and deposits work correctly.
+  
+  <Warning>
+  The SDK features only work when running inside the Lemon Cash WebView environment.
+  </Warning>
 </Accordion>
+
+## Complete example
+
+Here's a complete mini app that combines authentication and deposit functionality:
+
+```typescript
+import React, { useState } from 'react';
+import { 
+  useAuthenticate, 
+  DepositButton, 
+  useWebView,
+  useDepositResponse 
+} from 'mini-app-sdk';
+
+function MyMiniApp() {
+  const isWebView = useWebView();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  const { authenticate, loading: authLoading, error: authError, data: authData } = useAuthenticate({
+    nonce: 'your-unique-nonce-' + Date.now(),
+    onSuccess: (response) => {
+      setIsAuthenticated(true);
+      console.log('Authenticated:', response.predictedSafeAddress);
+    },
+    onError: (error) => {
+      console.error('Authentication failed:', error);
+    },
+  });
+  
+  const { txHash, loading: depositLoading } = useDepositResponse({
+    onSuccess: () => {
+      console.log('Deposit successful:', txHash);
+    },
+    onError: () => {
+      console.error('Deposit failed');
+    },
+  });
+  
+  if (!isWebView) {
+    return <div>This app only works inside Lemon Cash</div>;
+  }
+  
+  return (
+    <div>
+      <h1>My Mini App</h1>
+      
+      {!isAuthenticated ? (
+        <div>
+          <button onClick={authenticate} disabled={authLoading}>
+            {authLoading ? 'Authenticating...' : 'Authenticate'}
+          </button>
+          {authError && <p>Error: {authError.message}</p>}
+        </div>
+      ) : (
+        <div>
+          <p>Welcome! Address: {authData?.predictedSafeAddress}</p>
+          <DepositButton
+            amount={100}
+            currency="USDC"
+            network="polygon"
+            text="Deposit 100 USDC"
+            loading={depositLoading}
+          />
+          {txHash && <p>Transaction: {txHash}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default MyMiniApp;
+```
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
+Now that you have a basic mini app working, explore these advanced features:
 
 <CardGroup cols={2}>
 
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
+<Card title="Authentication" icon="key" href="/hooks/use-authenticate">
+  Learn more about user authentication and wallet signatures.
 </Card>
 
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
+<Card title="Transactions" icon="wallet" href="/components/deposit-button">
+  Explore deposit, withdrawal, and smart contract interactions.
 </Card>
 
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
+<Card title="WebView Communication" icon="message-circle" href="/concepts/webview-communication">
+  Understand how your mini app communicates with the native app.
 </Card>
 
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
+<Card title="API Reference" icon="book" href="/api-reference/types">
+  Explore the complete API reference and types.
 </Card>
 
 </CardGroup>
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  **Need help?** Check out our [examples](/api-reference/examples/authentication) or explore the [API reference](/api-reference/types).
 </Note>

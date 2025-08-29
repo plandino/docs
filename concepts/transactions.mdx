@@ -1,0 +1,425 @@
+---
+title: "Transactions"
+description: "Handle deposits, withdrawals, and smart contract interactions in your mini app"
+---
+
+## Overview
+
+The Mini App SDK provides components and hooks for handling various types of transactions within the Lemon Cash ecosystem. This includes deposits, withdrawals, and smart contract interactions, all handled securely through the native Lemon Cash mobile app.
+
+## Transaction Types
+
+The SDK supports three main types of transactions:
+
+<CardGroup cols={3}>
+<Card title="Deposits" icon="arrow-down">
+  Allow users to deposit funds into your mini app or smart contracts.
+</Card>
+
+<Card title="Withdrawals" icon="arrow-up">
+  Enable users to withdraw funds from your mini app or smart contracts.
+</Card>
+
+<Card title="Smart Contracts" icon="code">
+  Execute smart contract functions with user approval.
+</Card>
+</CardGroup>
+
+## Deposit Transactions
+
+Deposit transactions allow users to send funds to your mini app or associated smart contracts.
+
+### Using the Deposit Button
+
+The `DepositButton` component provides a pre-built UI for initiating deposits:
+
+```typescript
+import { DepositButton } from 'mini-app-sdk';
+
+function MyMiniApp() {
+  return (
+    <div>
+      <DepositButton
+        amount={100}
+        currency="USDC"
+        network="polygon"
+        text="Deposit 100 USDC"
+        onClick={() => console.log('Deposit initiated')}
+      />
+    </div>
+  );
+}
+```
+
+### Deposit Button Props
+
+<ParamField body="amount" type="number" required>
+  The amount to deposit in the smallest unit (e.g., wei for ETH, smallest decimal for tokens).
+</ParamField>
+
+<ParamField body="currency" type="string" required>
+  The currency/token symbol (e.g., "USDC", "ETH", "BTC").
+</ParamField>
+
+<ParamField body="network" type="CryptoNetwork" required>
+  The blockchain network for the transaction (e.g., "polygon", "ethereum").
+</ParamField>
+
+<ParamField body="text" type="string" default="Depositar">
+  The text to display on the button.
+</ParamField>
+
+<ParamField body="onClick" type="function">
+  Callback function called when the button is clicked.
+</ParamField>
+
+### Handling Deposit Responses
+
+Use the `useDepositResponse` hook to listen for deposit transaction results:
+
+```typescript
+import { useDepositResponse } from 'mini-app-sdk';
+
+function MyMiniApp() {
+  const { txHash, loading } = useDepositResponse({
+    onSuccess: () => {
+      console.log('Deposit successful:', txHash);
+      // Update UI, show success message, etc.
+    },
+    onError: () => {
+      console.error('Deposit failed');
+      // Show error message, retry option, etc.
+    },
+  });
+
+  return (
+    <div>
+      <DepositButton
+        amount={100}
+        currency="USDC"
+        network="polygon"
+        text="Deposit 100 USDC"
+      />
+      {loading && <p>Processing deposit...</p>}
+      {txHash && <p>Transaction: {txHash}</p>}
+    </div>
+  );
+}
+```
+
+## Withdrawal Transactions
+
+Withdrawal transactions allow users to withdraw funds from your mini app or smart contracts.
+
+### Using the Withdraw Button
+
+```typescript
+import { WithdrawButton } from 'mini-app-sdk';
+
+function MyMiniApp() {
+  return (
+    <div>
+      <WithdrawButton
+        amount={50}
+        currency="USDC"
+        network="polygon"
+        text="Withdraw 50 USDC"
+        onClick={() => console.log('Withdrawal initiated')}
+      />
+    </div>
+  );
+}
+```
+
+### Withdraw Button Props
+
+<ParamField body="amount" type="number" required>
+  The amount to withdraw in the smallest unit.
+</ParamField>
+
+<ParamField body="currency" type="string" required>
+  The currency/token symbol to withdraw.
+</ParamField>
+
+<ParamField body="network" type="CryptoNetwork" required>
+  The blockchain network for the withdrawal.
+</ParamField>
+
+<ParamField body="text" type="string" default="Retirar">
+  The text to display on the button.
+</ParamField>
+
+<ParamField body="onClick" type="function">
+  Callback function called when the button is clicked.
+</ParamField>
+
+## Smart Contract Interactions
+
+Smart contract interactions allow your mini app to execute functions on blockchain smart contracts with user approval.
+
+### Using the Smart Contract Button
+
+```typescript
+import { CallSmartContractButton } from 'mini-app-sdk';
+
+function MyMiniApp() {
+  return (
+    <div>
+      <CallSmartContractButton
+        contractAddress="0x1234..."
+        functionName="transfer"
+        args={["0x5678...", "1000000000000000000"]}
+        value="0"
+        network="polygon"
+        text="Transfer 1 ETH"
+        onClick={() => console.log('Smart contract call initiated')}
+      />
+    </div>
+  );
+}
+```
+
+### Smart Contract Button Props
+
+<ParamField body="contractAddress" type="string" required>
+  The address of the smart contract to interact with.
+</ParamField>
+
+<ParamField body="functionName" type="string" required>
+  The name of the function to call on the smart contract.
+</ParamField>
+
+<ParamField body="args" type="any[]" required>
+  Array of arguments to pass to the smart contract function.
+</ParamField>
+
+<ParamField body="value" type="string" required>
+  The amount of native currency (ETH, MATIC, etc.) to send with the transaction.
+</ParamField>
+
+<ParamField body="network" type="CryptoNetwork" required>
+  The blockchain network for the transaction.
+</ParamField>
+
+<ParamField body="text" type="string" default="Execute">
+  The text to display on the button.
+</ParamField>
+
+<ParamField body="onClick" type="function">
+  Callback function called when the button is clicked.
+</ParamField>
+
+## Transaction Flow
+
+All transactions follow a similar flow:
+
+<Steps>
+<Step title="User initiates">
+  User clicks a transaction button in your mini app.
+</Step>
+
+<Step title="Message sent">
+  Your mini app sends a message to the Lemon Cash mobile app with transaction details.
+</Step>
+
+<Step title="User approves">
+  User reviews and approves the transaction in the Lemon Cash mobile app.
+</Step>
+
+<Step title="Transaction processed">
+  The Lemon Cash mobile app processes the transaction on the blockchain.
+</Step>
+
+<Step title="Response received">
+  Your mini app receives the transaction result (success/failure, transaction hash).
+</Step>
+</Steps>
+
+## Error Handling
+
+Handle transaction errors gracefully:
+
+```typescript
+const { txHash, loading } = useDepositResponse({
+  onSuccess: () => {
+    showSuccessMessage('Transaction successful!');
+    updateUserBalance();
+  },
+  onError: () => {
+    showErrorMessage('Transaction failed. Please try again.');
+    // Provide retry option or alternative actions
+  },
+});
+```
+
+## Best Practices
+
+<Tip>
+Follow these best practices for reliable transaction handling:
+</Tip>
+
+### 1. Show Loading States
+
+Always show loading indicators during transaction processing:
+
+```typescript
+<DepositButton
+  amount={100}
+  currency="USDC"
+  network="polygon"
+  text={loading ? 'Processing...' : 'Deposit 100 USDC'}
+  disabled={loading}
+/>
+```
+
+### 2. Handle Network Issues
+
+Provide fallback behavior for network failures:
+
+```typescript
+const { txHash, loading } = useDepositResponse({
+  onError: (error) => {
+    if (error.message.includes('network')) {
+      showMessage('Network error. Please check your connection.');
+    } else {
+      showMessage('Transaction failed. Please try again.');
+    }
+  },
+});
+```
+
+### 3. Validate Inputs
+
+Validate transaction parameters before sending:
+
+```typescript
+function validateDeposit(amount: number, currency: string) {
+  if (amount <= 0) {
+    throw new Error('Amount must be greater than 0');
+  }
+  if (!currency) {
+    throw new Error('Currency is required');
+  }
+  // Add more validation as needed
+}
+```
+
+### 4. Store Transaction History
+
+Keep track of user transactions:
+
+```typescript
+const { txHash } = useDepositResponse({
+  onSuccess: () => {
+    // Store transaction in local storage or database
+    const transaction = {
+      hash: txHash,
+      type: 'deposit',
+      amount: 100,
+      currency: 'USDC',
+      timestamp: Date.now(),
+    };
+    
+    const history = JSON.parse(localStorage.getItem('transactions') || '[]');
+    history.push(transaction);
+    localStorage.setItem('transactions', JSON.stringify(history));
+  },
+});
+```
+
+## Complete Example
+
+Here's a complete example showing all transaction types:
+
+```typescript
+import React, { useState } from 'react';
+import { 
+  DepositButton, 
+  WithdrawButton, 
+  CallSmartContractButton,
+  useDepositResponse,
+  useWebView 
+} from 'mini-app-sdk';
+
+function MyMiniApp() {
+  const isWebView = useWebView();
+  const [balance, setBalance] = useState(1000);
+  
+  const { txHash: depositTxHash, loading: depositLoading } = useDepositResponse({
+    onSuccess: () => {
+      setBalance(prev => prev + 100);
+      console.log('Deposit successful:', depositTxHash);
+    },
+    onError: () => {
+      console.error('Deposit failed');
+    },
+  });
+
+  if (!isWebView) {
+    return <div>This app only works inside Lemon Cash</div>;
+  }
+
+  return (
+    <div>
+      <h1>My Mini App</h1>
+      <p>Balance: {balance} USDC</p>
+      
+      <div>
+        <h2>Deposits</h2>
+        <DepositButton
+          amount={100}
+          currency="USDC"
+          network="polygon"
+          text={depositLoading ? 'Processing...' : 'Deposit 100 USDC'}
+          disabled={depositLoading}
+        />
+        {depositTxHash && <p>Transaction: {depositTxHash}</p>}
+      </div>
+      
+      <div>
+        <h2>Withdrawals</h2>
+        <WithdrawButton
+          amount={50}
+          currency="USDC"
+          network="polygon"
+          text="Withdraw 50 USDC"
+        />
+      </div>
+      
+      <div>
+        <h2>Smart Contract</h2>
+        <CallSmartContractButton
+          contractAddress="0x1234..."
+          functionName="transfer"
+          args={["0x5678...", "1000000000000000000"]}
+          value="0"
+          network="polygon"
+          text="Transfer 1 ETH"
+        />
+      </div>
+    </div>
+  );
+}
+
+export default MyMiniApp;
+```
+
+## Supported Networks
+
+The SDK supports the following blockchain networks:
+
+<ResponseField name="polygon" type="string">
+  Polygon (MATIC) network for fast and low-cost transactions.
+</ResponseField>
+
+<ResponseField name="ethereum" type="string">
+  Ethereum mainnet for high-value transactions.
+</ResponseField>
+
+<ResponseField name="arbitrum" type="string">
+  Arbitrum network for scalable Ethereum transactions.
+</ResponseField>
+
+<Info>
+Network support may vary depending on the Lemon Cash mobile app version and user preferences.
+</Info>
